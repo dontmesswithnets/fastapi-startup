@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# IDE
+.venv/
+.idea/
+.env
+
+# Ruff and mypy cache
+.ruff_cache/
+.mypy_cache/
