@@ -1,6 +1,6 @@
 # fastapi-startup
 
-HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, and PostgreSQL 17.
+HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, Jinja2, and PostgreSQL 17. The root path serves an HTML page; health checks remain JSON.
 
 ## Requirements
 
@@ -36,31 +36,38 @@ postgresql+psycopg://USER:PASSWORD@127.0.0.1:5432/DBNAME
 ### Start PostgreSQL
 
 ```bash
-docker compose up -d
+make db
 ```
 
-Postgres is published on `127.0.0.1:5432` only. Wait until the service is healthy (`docker compose ps`).
+Same as `docker compose up -d`. Postgres is published on `127.0.0.1:5432` only. Wait until the service is healthy (`docker compose ps`).
 
 ### Install dependencies
 
 ```bash
-uv sync --group dev
+make sync
 ```
+
+Same as `uv sync --group dev`.
 
 ### Run the API
 
 From the repository root:
 
 ```bash
-uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+make run
 ```
+
+Same as `uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`. Then open [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 ## Endpoints
 
 | Method | Path | Description |
 | --- | --- | --- |
+| `GET` | `/` | HTML homepage from `src/app/templates/index.html` (Jinja2). |
 | `GET` | `/health` | Process liveness. Does not touch the database. |
 | `GET` | `/health/db` | Opens a SQLAlchemy session and runs `SELECT 1`. |
+
+Homepage: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 Interactive OpenAPI docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
@@ -69,14 +76,17 @@ curl -s http://127.0.0.1:8000/health
 curl -s http://127.0.0.1:8000/health/db
 ```
 
-Both return `{"status":"ok"}` when the corresponding check succeeds.
+Both health routes return `{"status":"ok"}` when the corresponding check succeeds.
 
 ## Development
 
 ```bash
+make db
+make sync
+make run
 make lint
 make format
 make typecheck
 ```
 
-`lint` and `typecheck` are read-only. `format` rewrites files under `src/`.
+`db`, `sync`, and `run` match the Getting started commands. `lint` and `typecheck` are read-only. `format` rewrites files under `src/`.
