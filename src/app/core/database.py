@@ -20,4 +20,5 @@ def get_session() -> Generator[Session]:
     with SessionFactory() as session:
         yield session
 
+
 SessionDep = Annotated[Session, Depends(get_session)]
