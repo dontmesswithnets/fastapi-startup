@@ -1,6 +1,6 @@
 # fastapi-startup
 
-HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, Jinja2, and PostgreSQL 17. The root path serves an HTML page; health checks remain JSON.
+HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, Jinja2, and PostgreSQL 17. Schema changes go through Alembic. The root path serves an HTML page; health checks remain JSON.
 
 ## Requirements
 
@@ -49,6 +49,14 @@ make sync
 
 Same as `uv sync --group dev`.
 
+### Apply migrations
+
+```bash
+uv run alembic upgrade head
+```
+
+Applies files under `alembic/versions/` to Postgres. Alembic reads `DATABASE_URL` from `.env`, same as the app. The first revision creates the `users` table. Run this again after pulling new migrations.
+
 ### Run the API
 
 From the repository root:
@@ -83,10 +91,19 @@ Both health routes return `{"status":"ok"}` when the corresponding check succeed
 ```bash
 make db
 make sync
+uv run alembic upgrade head
 make run
 make lint
 make format
 make typecheck
 ```
 
-`db`, `sync`, and `run` match the Getting started commands. `lint` and `typecheck` are read-only. `format` rewrites files under `src/`.
+`db`, `sync`, `alembic upgrade head`, and `run` match the Getting started commands. `lint` and `typecheck` are read-only. `format` rewrites files under `src/`.
+
+New model changes need a revision, then the same `upgrade`:
+
+```bash
+uv run alembic revision --autogenerate -m "short message"
+```
+
+Review the generated file under `alembic/versions/` before applying it.
