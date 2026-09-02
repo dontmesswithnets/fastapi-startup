@@ -16,3 +16,6 @@ build/
 # Ruff and mypy cache
 .ruff_cache/
 .mypy_cache/
+
+# Cursor
+.cursor/
