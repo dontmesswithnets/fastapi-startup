@@ -5,9 +5,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import literal, select
 
+from app.api.router import api_router
 from app.core.database import SessionDep
 
 app = FastAPI()
+
+app.include_router(api_router)
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 

@@ -1,6 +1,6 @@
 # fastapi-startup
 
-HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, Jinja2, and PostgreSQL 17. Schema changes go through Alembic. The root path serves an HTML page; health checks remain JSON.
+HTTP API built with FastAPI, SQLAlchemy 2, Pydantic v2, Jinja2, and PostgreSQL 17. Schema changes go through Alembic. The root path serves an HTML page; health checks remain JSON. User creation is JSON under `/api`.
 
 ## Requirements
 
@@ -74,6 +74,7 @@ Same as `uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`. The
 | `GET` | `/` | HTML homepage from `src/app/templates/index.html` (Jinja2). |
 | `GET` | `/health` | Process liveness. Does not touch the database. |
 | `GET` | `/health/db` | Opens a SQLAlchemy session and runs `SELECT 1`. |
+| `POST` | `/api/users/` | Create a user. JSON body: `email` and `password` (8–64 characters). |
 
 Homepage: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
@@ -82,9 +83,14 @@ Interactive OpenAPI docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/doc
 ```bash
 curl -s http://127.0.0.1:8000/health
 curl -s http://127.0.0.1:8000/health/db
+curl -s -X POST http://127.0.0.1:8000/api/users/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"your-password"}'
 ```
 
 Both health routes return `{"status":"ok"}` when the corresponding check succeeds.
+
+`POST /api/users/` returns `201` with `id`, `email`, and `created_at`. The password is stored hashed and is not in the response. A duplicate email returns `409`. Invalid email or password length returns `422`. The trailing slash is part of the path.
 
 ## Development
 
