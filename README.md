@@ -102,9 +102,10 @@ make run
 make lint
 make format
 make typecheck
+make test
 ```
 
-`db`, `sync`, `alembic upgrade head`, and `run` match the Getting started commands. `lint` and `typecheck` are read-only. `format` rewrites files under `src/`.
+`db`, `sync`, `alembic upgrade head`, and `run` match the Getting started commands. `lint` and `typecheck` are read-only. `format` rewrites files under `src/` and `tests/`. `test` is `uv run pytest`; see Tests below.
 
 New model changes need a revision, then the same `upgrade`:
 
@@ -113,3 +114,26 @@ uv run alembic revision --autogenerate -m "short message"
 ```
 
 Review the generated file under `alembic/versions/` before applying it.
+
+## Tests
+
+Pytest covers `POST /api/users/` (201, duplicate email 409, short password 422). Tests use FastAPI `TestClient` and the same Postgres server as `make db`, but a **second database** named `{POSTGRES_DB}_test`. They never write to the database in `DATABASE_URL`.
+
+Create that database once (name must be `POSTGRES_DB` from `.env` plus `_test`; example below uses `startup`):
+
+```bash
+make db
+docker compose exec postgres psql -U "$POSTGRES_USER" -d postgres -c 'CREATE DATABASE startup_test;'
+```
+
+If `$POSTGRES_USER` is empty in the shell, pass the same user as in `.env`. List databases with `\l` inside `psql` to confirm both `startup` and `startup_test` exist.
+
+Then:
+
+```bash
+make test
+```
+
+Same as `uv run pytest`. Pytest reads `.env`, points `DATABASE_URL` at the `_test` database, runs `alembic upgrade head` there, and deletes `users` rows after each test. You do not run Alembic on the test database by hand.
+
+Postgres must be healthy (`docker compose ps`). Without `.env` or without `{POSTGRES_DB}_test`, pytest fails at collection with a `RuntimeError`.

@@ -1,4 +1,4 @@
-.PHONY: lint format typecheck db sync run
+.PHONY: lint format typecheck test db sync run
 
 db:
 	docker compose up -d
@@ -11,11 +11,14 @@ run:
 
 
 lint:
-	uv run ruff check src
+	uv run ruff check src tests
 
 format:
-	uv run ruff format src
-	uv run ruff check src --fix
+	uv run ruff format src tests
+	uv run ruff check src tests --fix
 
 typecheck:
 	uv run mypy
+
+test:
+	uv run pytest
