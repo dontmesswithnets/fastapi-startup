@@ -16,7 +16,8 @@ config = context.config
 
 
 def get_url() -> str:
-    return str(settings.database_url)
+    url: str | None = config.attributes.get("database_url")
+    return url or str(settings.database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
