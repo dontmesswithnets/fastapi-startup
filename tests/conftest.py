@@ -26,12 +26,16 @@ TEST_DATABASE_URL = str(test_database_url)
 
 
 @pytest.fixture(scope="session")
-def engine() -> Iterator[Engine]:
-    engine = create_engine(TEST_DATABASE_URL)
-
+def alembic_config() -> Config:
     config = Config(str(ROOT / "alembic.ini"))
     config.attributes["database_url"] = TEST_DATABASE_URL
-    command.upgrade(config, "head")
+    return config
+
+
+@pytest.fixture(scope="session")
+def engine(alembic_config: Config) -> Iterator[Engine]:
+    engine = create_engine(TEST_DATABASE_URL)
+    command.upgrade(alembic_config, "head")
 
     yield engine
     engine.dispose()
