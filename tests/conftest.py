@@ -1,56 +1,60 @@
-import os
 from collections.abc import Iterator
 from pathlib import Path
-from urllib.parse import urlparse, urlunparse
 
 import pytest
 from alembic import command
 from alembic.config import Config
-from dotenv import dotenv_values
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
-
-ROOT = Path(__file__).resolve().parents[1]
-env = dotenv_values(ROOT / ".env")
-
-database_url = env.get("DATABASE_URL")
-postgres_db = env.get("POSTGRES_DB")
-
-if not database_url or not postgres_db:
-    raise RuntimeError("DATABASE_URL and POSTGRES_DB must be set in .env")
-
-parsed_url = urlparse(database_url)
-
-if parsed_url.path != f"/{postgres_db}":
-    raise RuntimeError("DATABASE_URL database name must match POSTGRES_DB")
-
-test_database_url = urlunparse(parsed_url._replace(path=f"/{postgres_db}_test"))
-
-if not isinstance(test_database_url, str):
-    raise TypeError("DATABASE_URL must be a string")
-
-os.environ["DATABASE_URL"] = test_database_url
-config = Config(str(ROOT / "alembic.ini"))
-
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import SessionFactory
+from app.core.database import get_session
 from app.main import app
-from app.models import User
 
-if settings.database_url.path != f"/{postgres_db}_test":
-    raise RuntimeError("Tests must only be run using the test database!")
+ROOT = Path(__file__).resolve().parents[1]
+
+test_database_url = settings.test_database_url
+
+if test_database_url is None:
+    raise RuntimeError("TEST_DATABASE_URL must be set (environment or .env)")
+
+if not str(test_database_url.path).endswith("_test"):
+    raise RuntimeError("TEST_DATABASE_URL must point to TEST database")
+
+TEST_DATABASE_URL = str(test_database_url)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def apply_migrations() -> None:
+@pytest.fixture(scope="session")
+def engine() -> Iterator[Engine]:
+    engine = create_engine(TEST_DATABASE_URL)
+
+    config = Config(str(ROOT / "alembic.ini"))
+    config.attributes["database_url"] = TEST_DATABASE_URL
     command.upgrade(config, "head")
+
+    yield engine
+    engine.dispose()
 
 
 @pytest.fixture
-def client(apply_migrations: None) -> Iterator[TestClient]:
+def session(engine: Engine) -> Iterator[Session]:
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        session = Session(bind=connection, join_transaction_mode="create_savepoint")
+
+        yield session
+
+        session.close()
+        transaction.rollback()
+
+
+@pytest.fixture
+def client(session: Session) -> Iterator[TestClient]:
+    def override_get_session() -> Iterator[Session]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_get_session
     with TestClient(app) as test_client:
         yield test_client
-    with SessionFactory() as session:
-        session.execute(delete(User))
-        session.commit()
+    app.dependency_overrides.clear()

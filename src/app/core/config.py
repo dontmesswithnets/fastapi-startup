@@ -8,6 +8,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     database_url: PostgresDsn
+    test_database_url: PostgresDsn | None = None
 
 
 settings = Settings()
