@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# IDE
+.venv/
+.idea/
+.env*
+
+# Ruff and mypy cache
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Cursor
+.cursor/
+
+# Git and Github
+.github/
+.git/
+
+# Tests
+tests/
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+
+# Not needed in the image
+Makefile
+
+# Not needed in the image
+README.md

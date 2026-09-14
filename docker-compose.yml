@@ -1,3 +1,6 @@
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -17,6 +20,27 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  migrate:
+    image: fastapi-startup
+    build: .
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    environment: *app-environment
+
+  app:
+    image: fastapi-startup
+    build: .
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment: *app-environment
+    ports:
+      - "127.0.0.1:8000:8000"
 
 volumes:
   pg_data:

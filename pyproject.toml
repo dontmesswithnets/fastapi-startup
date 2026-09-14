@@ -2,7 +2,6 @@
 name = "app"
 version = "0.1.0"
 description = "My FastAPI startup"
-readme = "README.md"
 authors = [
     { name = "Ildar Isangulov", email = "ildarvildanovich755@gmail.com" }
 ]
