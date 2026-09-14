@@ -33,3 +33,5 @@ jobs:
         run: make sync
       - name: run checks
         run: make check
+      - name: docker build
+        run: docker build .

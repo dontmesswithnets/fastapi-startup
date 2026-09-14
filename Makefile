@@ -1,13 +1,10 @@
-.PHONY: lint format-check format check typecheck test db sync run migrate migration
+.PHONY: lint format-check format check typecheck test up sync migrate migration
 
-db:
-	docker compose up -d
+up:
+	docker compose up -d --build
 
 sync:
 	uv sync --group dev
-
-run:
-	uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 migrate:
 	uv run alembic upgrade head
