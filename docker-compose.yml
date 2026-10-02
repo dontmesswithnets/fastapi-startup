@@ -22,7 +22,7 @@ services:
       start_period: 10s
 
   migrate:
-    image: fastapi-startup
+    image: ${APP_IMAGE:-fastapi-startup}
     build: .
     restart: "no"
     depends_on:
@@ -32,7 +32,7 @@ services:
     environment: *app-environment
 
   app:
-    image: fastapi-startup
+    image: ${APP_IMAGE:-fastapi-startup}
     build: .
     restart: unless-stopped
     depends_on:
