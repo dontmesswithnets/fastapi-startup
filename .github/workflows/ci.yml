@@ -110,7 +110,7 @@ jobs:
              export APP_IMAGE=ghcr.io/dontmesswithnets/fastapi-startup:${IMAGE_TAG} && \
              docker compose pull && \
              docker compose up -d --no-build && \
-             curl -fsS --retry 9 --retry-delay 2 --retry-connrefused http://127.0.0.1:8000/health/db" && \
-             docker image prune -af
+             curl -fsS --retry 9 --retry-delay 2 --retry-all-errors http://127.0.0.1:8000/health/db && \
+             docker image prune -af"
 
 
